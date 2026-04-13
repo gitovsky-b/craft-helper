@@ -97,7 +97,7 @@ class CraftApp(ctk.CTk):
         self.load_recipes()
 
     def load_recipes(self):
-        """Загружает список рецептов и обновляет интерфейс."""
+        #Загружает список рецептов и обновляет интерфейс.
         self.recipes = get_all_recipes()
         self.recipe_name_to_id = {r.name: r.id for r in self.recipes}
 
@@ -115,7 +115,7 @@ class CraftApp(ctk.CTk):
             self.clear_recipe_info()
 
     def on_recipe_select(self, event):
-        """Обработчик выбора рецепта в списке."""
+        #Обработчик выбора рецепта в списке.
         try:
             index = self.recipe_listbox.index("@%d,%d" % (event.x, event.y))
             line = self.recipe_listbox.get(f"{index} linestart", f"{index} lineend")
@@ -132,7 +132,7 @@ class CraftApp(ctk.CTk):
             pass
 
     def highlight_selected_recipe(self, index):
-        """Визуально выделяет выбранную строку в списке."""
+        #Визуально выделяет выбранную строку в списке.
         self.recipe_listbox.tag_remove("selected", "1.0", "end")
         start = f"{index} linestart"
         end = f"{index} lineend"
@@ -140,7 +140,7 @@ class CraftApp(ctk.CTk):
         self.recipe_listbox.tag_config("selected", background="#3a7ebf", foreground="white")
 
     def clear_recipe_info(self):
-        """Очищает правую панель информации о рецепте."""
+        #Очищает правую панель информации о рецепте.
         self.recipe_title.configure(text="Выберите рецепт")
         self.recipe_output.configure(text="")
         self.ingredients_text.configure(state="normal")
@@ -151,14 +151,13 @@ class CraftApp(ctk.CTk):
         self.ingredient_combo.set("")
 
     def update_recipe_info(self):
-        """Обновляет правую панель данными выбранного рецепта."""
+        #Обновляет правую панель данными выбранного рецепта.
         if not self.selected_recipe:
             return
-
+        
         r = self.selected_recipe
         self.recipe_title.configure(text=r.name)
         self.recipe_output.configure(text=f"Выход за крафт: {r.output_amount} шт.")
-
         # Список ингредиентов
         ing_lines = []
         for ing, amt in r.ingredients.items():
@@ -170,13 +169,9 @@ class CraftApp(ctk.CTk):
         self.ingredients_text.insert("1.0", ing_text)
         self.ingredients_text.configure(state="disabled")
 
-        # Заполняем выпадающий список ингредиентов (только базовые, не составные и не легкодоступные)
+        # Заполняем выпадающий список ингредиентов (все, кроме легкодоступных)
         easy = set(get_easy_ingredients())
-        all_recipes_dict = {rec.name.lower(): rec for rec in self.recipes}
-        available_ingredients = [
-            ing for ing in r.ingredients.keys()
-            if ing not in easy and ing not in all_recipes_dict
-        ]
+        available_ingredients = [ing for ing in r.ingredients.keys() if ing not in easy]
         if available_ingredients:
             self.ingredient_combo.configure(values=available_ingredients)
             self.ingredient_combo.set(available_ingredients[0])
@@ -190,7 +185,7 @@ class CraftApp(ctk.CTk):
         self.result_text.delete("1.0", "end")
 
     def calculate(self):
-        """Выполняет расчёт в зависимости от заполненных полей."""
+        #Выполняет расчёт в зависимости от заполненных полей.
         if not self.selected_recipe:
             messagebox.showwarning("Нет рецепта", "Сначала выберите рецепт.")
             return
@@ -209,7 +204,7 @@ class CraftApp(ctk.CTk):
             messagebox.showwarning("Нет данных", "Введите количество ингредиента или количество порций.")
 
     def calculate_by_ingredient(self, ing_name: str, amount_str: str):
-        """Расчёт по наличию ингредиента."""
+        #Расчёт по наличию ингредиента.
         try:
             amount = int(amount_str)
             if amount <= 0:
@@ -236,7 +231,7 @@ class CraftApp(ctk.CTk):
         self.result_text.insert("1.0", result)
 
     def calculate_by_servings(self, servings_str: str):
-        """Расчёт по требуемому количеству порций."""
+        #Расчёт по требуемому количеству порций.
         try:
             servings = int(servings_str)
             if servings <= 0:
