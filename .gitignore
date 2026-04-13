@@ -22,6 +22,7 @@ ENV/
 *.sqlite
 *.sqlite3
 craft.db
+init_db.py
 
 # PyInstaller
 *.manifest
