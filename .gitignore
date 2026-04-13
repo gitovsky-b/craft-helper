@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+*.log
+
+# Виртуальное окружение
+venv/
+env/
+.venv/
+ENV/
+
+# База данных
+*.db
+*.sqlite
+*.sqlite3
+craft.db
+
+# PyInstaller
+*.manifest
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Файлы с переменными окружения
+.env
+
+# Кэш CustomTkinter
+customtkinter_theme.json
+
+# Временные файлы при сборке
+*.tmp
+*.temp
