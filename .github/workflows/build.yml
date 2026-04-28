@@ -1,3 +1,4 @@
+# .github/workflows/build.yml
 name: Semantic Release and Build
 
 on:
@@ -12,13 +13,10 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    concurrency: release
     outputs:
-      new_tag: ${{ steps.semantic.outputs.new_release_tag }}
-
+      new_tag: ${{ steps.semantic.outputs.tag }}      # <-- правильный output
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -28,15 +26,11 @@ jobs:
         uses: python-semantic-release/python-semantic-release@v10.5.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Debug release outputs
-        run: |
-          echo "new_release_tag = ${{ steps.semantic.outputs.new_release_tag }}"
-          echo "new_release_version = ${{ steps.semantic.outputs.new_release_version }}"
 
   build:
     name: Build Artifacts
     needs: release
-    if: needs.release.outputs.new_tag != ''
+    if: needs.release.outputs.new_tag != ''           # тег гарантированно будет
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
