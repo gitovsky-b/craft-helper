@@ -30,8 +30,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Debug release outputs
         run: |
-        echo "new_release_tag = ${{ steps.semantic.outputs.new_release_tag }}"
-        echo "new_release_version = ${{ steps.semantic.outputs.new_release_version }}"
+          echo "new_release_tag = ${{ steps.semantic.outputs.new_release_tag }}"
+          echo "new_release_version = ${{ steps.semantic.outputs.new_release_version }}"
 
   build:
     name: Build Artifacts
