@@ -114,7 +114,7 @@ class CraftApp(ctk.CTk):
         self.check_updates_on_startup()
 
     def check_updates_on_startup(self):
-        """Запускает фоновую проверку обновлений."""
+        #Запускает фоновую проверку обновлений.
         threading.Thread(target=self._check_for_updates, daemon=True).start()
 
     def _check_for_updates(self):
@@ -148,7 +148,7 @@ class CraftApp(ctk.CTk):
             set_ignored_version(self.update_info["version"])
 
     def _download_and_install_update(self):
-        """Загружает файл обновления и после завершения предлагает перезапуск."""
+        #Загружает файл обновления и после завершения предлагает перезапуск.
         progress_window = ctk.CTkToplevel(self)
         progress_window.title("Загрузка обновления...")
         progress_window.geometry("300x100")
@@ -182,7 +182,7 @@ class CraftApp(ctk.CTk):
             apply_update_and_restart(local_file)
 
     def load_recipes(self):
-        """Загружает список рецептов и обновляет интерфейс."""
+        #Загружает список рецептов и обновляет интерфейс.
         self.recipes = get_all_recipes()
         self.recipe_name_to_id = {r.name: r.id for r in self.recipes}
 
