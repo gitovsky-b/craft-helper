@@ -5,7 +5,7 @@ from database import (
     get_easy_ingredients, add_easy_ingredient, delete_easy_ingredient
 )
 from dialogs import AddEditRecipeDialog, EasyIngredientsDialog
-from calculator import expand_recipe, max_crafts_by_ingredient
+from calculator import expand_recipe, expand_recipe_excluding, max_crafts_by_ingredient
 from models import Recipe
 
 ctk.set_appearance_mode("System")
@@ -220,7 +220,7 @@ class CraftApp(ctk.CTk):
             result = f"❌ Не хватает {ing_name.capitalize()} даже на один крафт.\n"
         else:
             total_servings = max_crafts * self.selected_recipe.output_amount
-            base = expand_recipe(self.selected_recipe, total_servings, all_recipes)
+            base = expand_recipe_excluding(self.selected_recipe, total_servings, all_recipes, exclude_ingredient=ing_name)
             result = f"📊 Имея {amount} x {ing_name.capitalize()}\n"
             result += f"Можно скрафтить максимум {max_crafts} раз(а) → {total_servings} шт.\n\n"
             result += "Потребуется базовых ингредиентов:\n"

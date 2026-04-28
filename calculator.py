@@ -34,3 +34,30 @@ def max_crafts_by_ingredient(recipe: Recipe, ingredient: str, available: int) ->
     if not need:
         return 0
     return available // need
+
+def expand_recipe_excluding(recipe: Recipe, required_servings: int, all_recipes: Dict[str, Recipe], exclude_ingredient: str = None, visited: Set[str] = None) -> Dict[str, int]:
+    #Разворачивает рецепт, но если встречается исключаемый ингредиент, не разворачивает его.
+    if visited is None:
+        visited = set()
+    result = {}
+    if recipe.name.lower() in visited:
+        raise ValueError(f"Цикл: {recipe.name}")
+    visited.add(recipe.name.lower())
+
+    crafts = (required_servings + recipe.output_amount - 1) // recipe.output_amount
+
+    for ing_name, amount_per_craft in recipe.ingredients.items():
+        total_needed = amount_per_craft * crafts
+        # Если это исключаемый ингредиент — не разворачиваем
+        if exclude_ingredient and ing_name.lower() == exclude_ingredient.lower():
+            result[ing_name] = result.get(ing_name, 0) + total_needed
+        elif ing_name.lower() in all_recipes:
+            sub_recipe = all_recipes[ing_name.lower()]
+            sub_map = expand_recipe_excluding(sub_recipe, total_needed, all_recipes, exclude_ingredient, visited.copy())
+            for k, v in sub_map.items():
+                result[k] = result.get(k, 0) + v
+        else:
+            result[ing_name] = result.get(ing_name, 0) + total_needed
+
+    visited.remove(recipe.name.lower())
+    return result
