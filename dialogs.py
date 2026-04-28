@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 from database import add_recipe, update_recipe, get_recipe_by_id, get_easy_ingredients, add_easy_ingredient, delete_easy_ingredient
 from models import Recipe
+from version import __version__
 import json
 
 class AddEditRecipeDialog(ctk.CTkToplevel):
@@ -166,3 +167,51 @@ class EasyIngredientsDialog(ctk.CTkToplevel):
                 self.update_list()
         except:
             pass
+
+class UpdateDialog(ctk.CTkToplevel):
+    def __init__(self, parent, new_version, changelog=""):
+        super().__init__(parent)
+        self.title("Доступно обновление")
+        self.geometry("480x380")          # немного увеличили размер
+        self.resizable(False, False)
+        self.result = False
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(2, weight=1)  # строка с чейнджлогом будет растягиваться
+
+        ctk.CTkLabel(self, text="🔄", font=("Arial", 40)).grid(row=0, column=0, pady=(15,5))
+        ctk.CTkLabel(self, text=f"Версия {new_version} уже доступна!\nУ вас установлена {__version__}.",
+                     font=("Arial", 14), justify="center").grid(row=1, column=0, padx=20, pady=5)
+
+        # Область с изменениями
+        changelog_frame = ctk.CTkFrame(self, fg_color="transparent")
+        changelog_frame.grid(row=2, column=0, padx=20, pady=5, sticky="nsew")
+        changelog_frame.grid_rowconfigure(0, weight=1)
+        changelog_frame.grid_columnconfigure(0, weight=1)
+
+        text_widget = ctk.CTkTextbox(changelog_frame, wrap="word", font=("Arial", 12))
+        text_widget.grid(row=0, column=0, sticky="nsew")
+        text_widget.insert("0.0", changelog if changelog else "Список изменений недоступен.")
+        text_widget.configure(state="disabled")  # только для чтения
+
+        # Кнопки
+        button_frame = ctk.CTkFrame(self, fg_color="transparent")
+        button_frame.grid(row=3, column=0, pady=(10,15))
+
+        btn_update = ctk.CTkButton(button_frame, text="Обновить", command=self._on_update)
+        btn_update.pack(side="left", padx=10)
+
+        btn_later = ctk.CTkButton(button_frame, text="Позже", fg_color="gray", command=self._on_later)
+        btn_later.pack(side="left", padx=10)
+
+        self.transient(parent)
+        self.grab_set()
+        self.protocol("WM_DELETE_WINDOW", self._on_later)
+
+    def _on_update(self):
+        self.result = True
+        self.destroy()
+
+    def _on_later(self):
+        self.result = False
+        self.destroy()

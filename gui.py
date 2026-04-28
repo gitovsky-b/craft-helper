@@ -4,9 +4,22 @@ from database import (
     get_all_recipes, delete_recipe, get_recipe_by_id,
     get_easy_ingredients, add_easy_ingredient, delete_easy_ingredient
 )
-from dialogs import AddEditRecipeDialog, EasyIngredientsDialog
+from updater import (
+    get_latest_release_info,
+    is_new_version_available,
+    find_asset_for_platform,
+    download_update,
+    apply_update_and_restart,
+    get_update_details,
+    get_ignored_version,
+    set_ignored_version
+)
+from dialogs import AddEditRecipeDialog, EasyIngredientsDialog, UpdateDialog
 from calculator import expand_recipe, expand_recipe_excluding, max_crafts_by_ingredient
 from models import Recipe
+import threading
+import os
+import tempfile
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -95,6 +108,93 @@ class CraftApp(ctk.CTk):
 
         # Загрузка данных
         self.load_recipes()
+
+        # Инициализация обновлений
+        self.update_info = None
+        self.check_updates_on_startup()
+
+    def check_updates_on_startup(self):
+        """Запускает фоновую проверку обновлений."""
+        threading.Thread(target=self._check_for_updates, daemon=True).start()
+
+    def _check_for_updates(self):
+        latest = get_latest_release_info()
+        if not latest:
+            return
+
+        details = get_update_details(latest)
+        if not details:
+            return
+
+        ignored = get_ignored_version()
+        if ignored == details["version"]:
+            return
+
+        self.update_info = details
+        self.after(0, self._show_update_dialog)
+
+    def _show_update_dialog(self):
+        if not self.update_info:
+            return
+        dialog = UpdateDialog(
+            self,
+            new_version=self.update_info["version"],
+            changelog=self.update_info.get("changelog", "")
+        )
+        self.wait_window(dialog)
+        if dialog.result:
+            self._download_and_install_update()
+        else:
+            set_ignored_version(self.update_info["version"])
+
+    def _download_and_install_update(self):
+        """Загружает файл обновления и после завершения предлагает перезапуск."""
+        progress_window = ctk.CTkToplevel(self)
+        progress_window.title("Загрузка обновления...")
+        progress_window.geometry("300x100")
+        progress_window.transient(self)
+        progress_window.grab_set()
+
+        progress_label = ctk.CTkLabel(progress_window, text="Скачивание обновления, пожалуйста подождите...")
+        progress_label.pack(pady=(15,5))
+        progress_bar = ctk.CTkProgressBar(progress_window, mode="determinate", width=250)
+        progress_bar.pack(pady=5)
+        progress_bar.set(0)
+
+        def do_download():
+            asset = self.update_info['asset']
+            temp_path = os.path.join(tempfile.gettempdir(), asset['name'])
+            success = download_update(
+                asset,
+                temp_path,
+                progress_callback=lambda val: self.after(0, progress_bar.set, val)
+            )
+            progress_window.after(0, progress_window.destroy)
+            if success:
+                self.after(100, lambda: self._finish_update(temp_path))
+            else:
+                self.after(0, messagebox.showerror, "Ошибка", "Не удалось загрузить обновление.")
+
+        threading.Thread(target=do_download, daemon=True).start()
+
+    def _finish_update(self, local_file):
+        if messagebox.askyesno("Готово", "Обновление загружено. Перезапустить приложение сейчас?"):
+            apply_update_and_restart(local_file)
+
+    def load_recipes(self):
+        """Загружает список рецептов и обновляет интерфейс."""
+        self.recipes = get_all_recipes()
+        self.recipe_name_to_id = {r.name: r.id for r in self.recipes}
+
+        self.recipe_listbox.configure(state="normal")
+        self.recipe_listbox.delete("1.0", "end")
+        for r in self.recipes:
+            self.recipe_listbox.insert("end", f"{r.name}\n")
+        self.recipe_listbox.configure(state="disabled")
+
+        if self.selected_recipe and self.selected_recipe.id not in [r.id for r in self.recipes]:
+            self.selected_recipe = None
+            self.clear_recipe_info()
 
     def load_recipes(self):
         #Загружает список рецептов и обновляет интерфейс.
