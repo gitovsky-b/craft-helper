@@ -4,15 +4,10 @@ version = "0.2.2"
 description = "Десктопное приложение для расчёта крафтов в играх"
 
 [tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"] # Указываем, что версия будет автоматически обновляться в этом файле
+version_toml = ["pyproject.toml:project.version"]
 commit_parser = "conventional"
-build_command = "echo 'Build step: nothing to do here. Artifacts are built in CI.'"
 allow_zero_version = true
-
-[tool.semantic_release.commit_parser_options]
-major_tags = ["feat!"]
-minor_tags = ["feat"]
-patch_tags = ["fix", "perf"]
+build_command = "echo 'No build in this step'"
 
 [tool.semantic_release.changelog]
 changelog_file = "CHANGELOG.md"
