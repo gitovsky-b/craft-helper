@@ -1,0 +1,28 @@
+[project]
+name = "craft-helper"
+version = "0.1.3" # Указываем текущую версию, с которой начинается интеграция
+description = "Десктопное приложение для расчёта крафтов в играх"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"] # Указываем, что версия будет автоматически обновляться в этом файле
+
+commit_parser = "conventional"
+
+build_command = "echo 'Build step: nothing to do here. Artifacts are built in CI.'"
+
+[tool.semantic_release.commit_parser_options]
+minor_tags = ["feat!"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+exclude_commit_patterns = [
+    '''chore(?:\([^)]*?\))?: .+''',
+    '''ci(?:\([^)]*?\))?: .+''',
+    '''refactor(?:\([^)]*?\))?: .+''',
+    '''style(?:\([^)]*?\))?: .+''',
+    '''test(?:\([^)]*?\))?: .+''',
+    '''build(?:\([^)]*?\))?: .+''',
+    '''docs(?:\([^)]*?\))?: .+''',
+]
