@@ -1,9 +1,11 @@
 [project]
 name = "craft-helper"
-version = "0.2.4"
+version = "0.2.5"
 description = "Десктопное приложение для расчёта крафтов в играх"
 
 [tool.semantic_release]
+version_source = "tag"
+commit_version_number = true
 version_toml = ["pyproject.toml:project.version"]
 commit_parser = "conventional"
 allow_zero_version = true
