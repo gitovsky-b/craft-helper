@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
+import tkinter as tk  # добавлен импорт для tk.Menu
 from database import (
     get_all_recipes, delete_recipe, get_recipe_by_id,
     get_easy_ingredients, add_easy_ingredient, delete_easy_ingredient
@@ -103,8 +104,18 @@ class CraftApp(ctk.CTk):
         self.result_text = ctk.CTkTextbox(self.info_frame, height=200)
         self.result_text.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # Привязка событий
+        # Привязка событий (после создания всех виджетов)
         self.recipe_listbox.bind("<ButtonRelease-1>", self.on_recipe_select)
+
+        # Горячие клавиши буфера обмена
+        self.bind_all("<Control-c>", self.copy_selection)
+        self.bind_all("<Control-v>", self.paste_text)
+
+        # Контекстное меню (правая кнопка мыши)
+        self.recipe_listbox.bind("<Button-3>", self.show_context_menu)
+        self.result_text.bind("<Button-3>", self.show_context_menu)
+        self.ingredient_amount_entry.bind("<Button-3>", self.show_context_menu)
+        self.servings_entry.bind("<Button-3>", self.show_context_menu)
 
         # Загрузка данных
         self.load_recipes()
@@ -113,23 +124,79 @@ class CraftApp(ctk.CTk):
         self.update_info = None
         self.check_updates_on_startup()
 
+    # ---------------------- Методы буфера обмена ----------------------
+    def copy_selection(self, event=None):
+        """Копирует выделенный текст из виджета, находящегося в фокусе."""
+        try:
+            focused_widget = self.focus_get()
+            # Проверяем, что виджет поддерживает выделение текста
+            if isinstance(focused_widget, (ctk.CTkTextbox, ctk.CTkEntry)):
+                # Для CTkTextbox
+                if isinstance(focused_widget, ctk.CTkTextbox) and focused_widget.tag_ranges("sel"):
+                    selected_text = focused_widget.get("sel.first", "sel.last")
+                    self.clipboard_clear()
+                    self.clipboard_append(selected_text)
+                # Для CTkEntry
+                elif isinstance(focused_widget, ctk.CTkEntry) and focused_widget.selection_get():
+                    selected_text = focused_widget.selection_get()
+                    self.clipboard_clear()
+                    self.clipboard_append(selected_text)
+            # Если это стандартный tkinter виджет (например, выпадающий список)
+            elif isinstance(focused_widget, tk.Entry):
+                try:
+                    selected_text = focused_widget.selection_get()
+                    self.clipboard_clear()
+                    self.clipboard_append(selected_text)
+                except tk.TclError:
+                    pass
+        except Exception as e:
+            print(f"Ошибка копирования: {e}")
+
+    def paste_text(self, event=None):
+        """Вставляет текст из буфера обмена в активный виджет."""
+        try:
+            focused_widget = self.focus_get()
+            clipboard_text = self.clipboard_get()
+
+            if isinstance(focused_widget, ctk.CTkEntry):
+                if focused_widget.selection_present():
+                    focused_widget.delete("sel.first", "sel.last")
+                focused_widget.insert("insert", clipboard_text)
+            elif isinstance(focused_widget, ctk.CTkTextbox):
+                if focused_widget.tag_ranges("sel"):
+                    focused_widget.delete("sel.first", "sel.last")
+                focused_widget.insert("insert", clipboard_text)
+            elif isinstance(focused_widget, tk.Entry):
+                if focused_widget.selection_present():
+                    focused_widget.delete("sel.first", "sel.last")
+                focused_widget.insert("insert", clipboard_text)
+        except Exception as e:
+            print(f"Ошибка вставки: {e}")
+
+    def show_context_menu(self, event):
+        """Отображает контекстное меню с командами Копировать/Вставить."""
+        context_menu = tk.Menu(self, tearoff=0)
+        context_menu.add_command(label="Копировать", command=self.copy_selection)
+        context_menu.add_command(label="Вставить", command=self.paste_text)
+        try:
+            context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            context_menu.grab_release()
+
+    # ---------------------- Остальные методы ----------------------
     def check_updates_on_startup(self):
-        #Запускает фоновую проверку обновлений.
         threading.Thread(target=self._check_for_updates, daemon=True).start()
 
     def _check_for_updates(self):
         latest = get_latest_release_info()
         if not latest:
             return
-
         details = get_update_details(latest)
         if not details:
             return
-
         ignored = get_ignored_version()
         if ignored == details["version"]:
             return
-
         self.update_info = details
         self.after(0, self._show_update_dialog)
 
@@ -148,7 +215,6 @@ class CraftApp(ctk.CTk):
             set_ignored_version(self.update_info["version"])
 
     def _download_and_install_update(self):
-        #Загружает файл обновления и после завершения предлагает перезапуск.
         progress_window = ctk.CTkToplevel(self)
         progress_window.title("Загрузка обновления...")
         progress_window.geometry("300x100")
@@ -182,7 +248,7 @@ class CraftApp(ctk.CTk):
             apply_update_and_restart(local_file)
 
     def load_recipes(self):
-        #Загружает список рецептов и обновляет интерфейс.
+        """Загружает список рецептов и обновляет интерфейс."""
         self.recipes = get_all_recipes()
         self.recipe_name_to_id = {r.name: r.id for r in self.recipes}
 
@@ -192,30 +258,11 @@ class CraftApp(ctk.CTk):
             self.recipe_listbox.insert("end", f"{r.name}\n")
         self.recipe_listbox.configure(state="disabled")
 
-        if self.selected_recipe and self.selected_recipe.id not in [r.id for r in self.recipes]:
-            self.selected_recipe = None
-            self.clear_recipe_info()
-
-    def load_recipes(self):
-        #Загружает список рецептов и обновляет интерфейс.
-        self.recipes = get_all_recipes()
-        self.recipe_name_to_id = {r.name: r.id for r in self.recipes}
-
-        self.recipe_listbox.configure(state="normal")
-        self.recipe_listbox.delete("1.0", "end")
-
-        for r in self.recipes:
-            self.recipe_listbox.insert("end", f"{r.name}\n")
-
-        self.recipe_listbox.configure(state="disabled")
-
-        # Если был выбран рецепт, которого больше нет, сбрасываем выделение
         if self.selected_recipe and self.selected_recipe.id not in [r.id for r in self.recipes]:
             self.selected_recipe = None
             self.clear_recipe_info()
 
     def on_recipe_select(self, event):
-        #Обработчик выбора рецепта в списке.
         try:
             index = self.recipe_listbox.index("@%d,%d" % (event.x, event.y))
             line = self.recipe_listbox.get(f"{index} linestart", f"{index} lineend")
@@ -232,7 +279,6 @@ class CraftApp(ctk.CTk):
             pass
 
     def highlight_selected_recipe(self, index):
-        #Визуально выделяет выбранную строку в списке.
         self.recipe_listbox.tag_remove("selected", "1.0", "end")
         start = f"{index} linestart"
         end = f"{index} lineend"
@@ -240,7 +286,6 @@ class CraftApp(ctk.CTk):
         self.recipe_listbox.tag_config("selected", background="#3a7ebf", foreground="white")
 
     def clear_recipe_info(self):
-        #Очищает правую панель информации о рецепте.
         self.recipe_title.configure(text="Выберите рецепт")
         self.recipe_output.configure(text="")
         self.ingredients_text.configure(state="normal")
@@ -251,25 +296,20 @@ class CraftApp(ctk.CTk):
         self.ingredient_combo.set("")
 
     def update_recipe_info(self):
-        #Обновляет правую панель данными выбранного рецепта.
         if not self.selected_recipe:
             return
-        
         r = self.selected_recipe
         self.recipe_title.configure(text=r.name)
         self.recipe_output.configure(text=f"Выход за крафт: {r.output_amount} шт.")
-        # Список ингредиентов
         ing_lines = []
         for ing, amt in r.ingredients.items():
             ing_lines.append(f"• {ing.capitalize()}: {amt}")
         ing_text = "\n".join(ing_lines)
-
         self.ingredients_text.configure(state="normal")
         self.ingredients_text.delete("1.0", "end")
         self.ingredients_text.insert("1.0", ing_text)
         self.ingredients_text.configure(state="disabled")
 
-        # Заполняем выпадающий список ингредиентов (все, кроме легкодоступных)
         easy = set(get_easy_ingredients())
         available_ingredients = [ing for ing in r.ingredients.keys() if ing not in easy]
         if available_ingredients:
@@ -279,23 +319,17 @@ class CraftApp(ctk.CTk):
             self.ingredient_combo.configure(values=["Нет подходящих"])
             self.ingredient_combo.set("")
 
-        # Очищаем поля ввода и результат
         self.ingredient_amount_entry.delete(0, "end")
         self.servings_entry.delete(0, "end")
         self.result_text.delete("1.0", "end")
 
     def calculate(self):
-        #Выполняет расчёт в зависимости от заполненных полей.
         if not self.selected_recipe:
             messagebox.showwarning("Нет рецепта", "Сначала выберите рецепт.")
             return
-
-        # Получаем значения из полей
         ing_name = self.ingredient_combo.get().strip().lower()
         ing_amount_str = self.ingredient_amount_entry.get().strip()
         servings_str = self.servings_entry.get().strip()
-
-        # Определяем, какой расчёт выполнять (приоритет: ингредиент, если оба заполнены)
         if ing_name and ing_name != "нет подходящих" and ing_amount_str:
             self.calculate_by_ingredient(ing_name, ing_amount_str)
         elif servings_str:
@@ -304,7 +338,6 @@ class CraftApp(ctk.CTk):
             messagebox.showwarning("Нет данных", "Введите количество ингредиента или количество порций.")
 
     def calculate_by_ingredient(self, ing_name: str, amount_str: str):
-        #Расчёт по наличию ингредиента.
         try:
             amount = int(amount_str)
             if amount <= 0:
@@ -312,10 +345,8 @@ class CraftApp(ctk.CTk):
         except ValueError:
             self.result_text.insert("end", "❌ Ошибка: введите положительное число для количества ингредиента.\n")
             return
-
         all_recipes = {r.name.lower(): r for r in self.recipes}
         max_crafts = max_crafts_by_ingredient(self.selected_recipe, ing_name, amount)
-
         if max_crafts == 0:
             result = f"❌ Не хватает {ing_name.capitalize()} даже на один крафт.\n"
         else:
@@ -326,12 +357,10 @@ class CraftApp(ctk.CTk):
             result += "Потребуется базовых ингредиентов:\n"
             for name, count in base.items():
                 result += f"• {name.capitalize()}: {count}\n"
-
         self.result_text.delete("1.0", "end")
         self.result_text.insert("1.0", result)
 
     def calculate_by_servings(self, servings_str: str):
-        #Расчёт по требуемому количеству порций.
         try:
             servings = int(servings_str)
             if servings <= 0:
@@ -339,7 +368,6 @@ class CraftApp(ctk.CTk):
         except ValueError:
             self.result_text.insert("end", "❌ Ошибка: введите положительное число для количества порций.\n")
             return
-
         all_recipes = {r.name.lower(): r for r in self.recipes}
         try:
             base = expand_recipe(self.selected_recipe, servings, all_recipes)
@@ -354,7 +382,6 @@ class CraftApp(ctk.CTk):
             self.result_text.delete("1.0", "end")
             self.result_text.insert("1.0", f"Ошибка: {e}\n")
 
-    # Методы для работы с рецептами (без изменений)
     def add_recipe(self):
         dialog = AddEditRecipeDialog(self)
         self.wait_window(dialog)
@@ -367,7 +394,6 @@ class CraftApp(ctk.CTk):
         dialog = AddEditRecipeDialog(self, recipe_id=self.selected_recipe.id)
         self.wait_window(dialog)
         self.load_recipes()
-        # Восстанавливаем выделение
         if self.selected_recipe and self.selected_recipe.id in [r.id for r in self.recipes]:
             self.update_recipe_info()
         else:
@@ -386,7 +412,6 @@ class CraftApp(ctk.CTk):
 
     def manage_easy(self):
         EasyIngredientsDialog(self)
-        # После закрытия диалога обновляем информацию о рецепте (могли измениться легкодоступные)
         if self.selected_recipe:
             self.update_recipe_info()
 
