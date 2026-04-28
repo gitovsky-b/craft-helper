@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v0.2.5 (2026-04-28)
+
+### Bug Fixes
+
+- Trigger release after cleanup
+  ([`6aa5b57`](https://github.com/gitovsky-b/craft-helper/commit/6aa5b57e5eea422ca92fd043d420a7c431230da7))
+
+- Updated build.yml
+  ([`0214801`](https://github.com/gitovsky-b/craft-helper/commit/0214801011a18c0f5aa91a787876f7aa04c5dc8e))
+
+
 ## v0.2.4 (2026-04-28)
 
 ### Bug Fixes
