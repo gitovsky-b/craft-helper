@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.2.1 (2026-04-28)
+
+### Bug Fixes
+
+- Update build.yml so artifacts will be created again
+  ([`411be4b`](https://github.com/gitovsky-b/craft-helper/commit/411be4b5659b81e307592020f26af8450a968809))
+
+
 ## v0.2.0 (2026-04-28)
 
 ### Bug Fixes
