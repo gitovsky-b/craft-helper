@@ -11,7 +11,7 @@ commit_parser = "conventional"
 build_command = "echo 'Build step: nothing to do here. Artifacts are built in CI.'"
 
 [tool.semantic_release.commit_parser_options]
-minor_tags = ["feat!"]
+major_tags = ["feat!"]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
 
