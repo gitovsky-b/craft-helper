@@ -1,6 +1,6 @@
 [project]
 name = "craft-helper"
-version = "1.0.0"
+version = "0.2.4"
 description = "Десктопное приложение для расчёта крафтов в играх"
 
 [tool.semantic_release]
