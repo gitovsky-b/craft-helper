@@ -2,6 +2,34 @@
 
 <!-- version list -->
 
+## v0.3.0 (2026-04-28)
+
+### Bug Fixes
+
+- Correct semantic-release output variable name
+  ([`31a48d0`](https://github.com/gitovsky-b/craft-helper/commit/31a48d0a6efd7a8b6aeaf6d6e430e1c3a1c75b4c))
+
+- Correct semantic-release output variable name
+  ([`7d0e60d`](https://github.com/gitovsky-b/craft-helper/commit/7d0e60d724bf506687263909cc51b52ccf3cf380))
+
+- Trigger release after cleanup
+  ([`6aa5b57`](https://github.com/gitovsky-b/craft-helper/commit/6aa5b57e5eea422ca92fd043d420a7c431230da7))
+
+- Trigger release after cleanup
+  ([`37789e0`](https://github.com/gitovsky-b/craft-helper/commit/37789e01a6f2b5af61c4da7420e5da768d0dbda3))
+
+- Trigger release after cleanup
+  ([`58884fe`](https://github.com/gitovsky-b/craft-helper/commit/58884fed8df4ffeb79a7ee7295ebe9b30631cbc5))
+
+- Updated build.yml
+  ([`0214801`](https://github.com/gitovsky-b/craft-helper/commit/0214801011a18c0f5aa91a787876f7aa04c5dc8e))
+
+### Features
+
+- Copy and paste functions have been added
+  ([`5328063`](https://github.com/gitovsky-b/craft-helper/commit/53280637757a5c4274b5d4a7c87ae06f926aa4c1))
+
+
 ## v0.2.4 (2026-04-28)
 
 ### Bug Fixes
