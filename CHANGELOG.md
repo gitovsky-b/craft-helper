@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.3.1 (2026-04-30)
+
+### Bug Fixes
+
+- Fixed the bug that caused duplicate pasted text
+  ([`379bc3c`](https://github.com/gitovsky-b/craft-helper/commit/379bc3ca72ed15edcdca3c93888818d4abe5c573))
+
+
 ## v0.3.0 (2026-04-28)
 
 ### Bug Fixes
