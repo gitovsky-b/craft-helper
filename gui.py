@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
-import tkinter as tk  # добавлен импорт для tk.Menu
+import tkinter as tk
 from database import (
     get_all_recipes, delete_recipe, get_recipe_by_id,
     get_easy_ingredients, add_easy_ingredient, delete_easy_ingredient
@@ -107,16 +107,6 @@ class CraftApp(ctk.CTk):
         # Привязка событий (после создания всех виджетов)
         self.recipe_listbox.bind("<ButtonRelease-1>", self.on_recipe_select)
 
-        # Горячие клавиши буфера обмена
-        self.bind_all("<Control-c>", self.copy_selection)
-        self.bind_all("<Control-v>", self.paste_text)
-
-        # Контекстное меню (правая кнопка мыши)
-        self.recipe_listbox.bind("<Button-3>", self.show_context_menu)
-        self.result_text.bind("<Button-3>", self.show_context_menu)
-        self.ingredient_amount_entry.bind("<Button-3>", self.show_context_menu)
-        self.servings_entry.bind("<Button-3>", self.show_context_menu)
-
         # Загрузка данных
         self.load_recipes()
 
@@ -125,63 +115,48 @@ class CraftApp(ctk.CTk):
         self.check_updates_on_startup()
 
     # ---------------------- Методы буфера обмена ----------------------
-    def copy_selection(self, event=None):
-        """Копирует выделенный текст из виджета, находящегося в фокусе."""
+
+    def _context_copy(self):
+        #Копирует выделенный текст из активного виджета в буфер обмена.
         try:
-            focused_widget = self.focus_get()
-            # Проверяем, что виджет поддерживает выделение текста
-            if isinstance(focused_widget, (ctk.CTkTextbox, ctk.CTkEntry)):
-                # Для CTkTextbox
-                if isinstance(focused_widget, ctk.CTkTextbox) and focused_widget.tag_ranges("sel"):
-                    selected_text = focused_widget.get("sel.first", "sel.last")
-                    self.clipboard_clear()
-                    self.clipboard_append(selected_text)
-                # Для CTkEntry
-                elif isinstance(focused_widget, ctk.CTkEntry) and focused_widget.selection_get():
-                    selected_text = focused_widget.selection_get()
-                    self.clipboard_clear()
-                    self.clipboard_append(selected_text)
-            # Если это стандартный tkinter виджет (например, выпадающий список)
-            elif isinstance(focused_widget, tk.Entry):
+            widget = self.focus_get()
+            if isinstance(widget, ctk.CTkEntry) and widget.selection_present():
+                selected = widget.selection_get()
+                self.clipboard_clear()
+                self.clipboard_append(selected)
+            elif isinstance(widget, ctk.CTkTextbox) and widget.tag_ranges("sel"):
+                selected = widget.get("sel.first", "sel.last")
+                self.clipboard_clear()
+                self.clipboard_append(selected)
+            elif isinstance(widget, tk.Entry):
                 try:
-                    selected_text = focused_widget.selection_get()
+                    selected = widget.selection_get()
                     self.clipboard_clear()
-                    self.clipboard_append(selected_text)
+                    self.clipboard_append(selected)
                 except tk.TclError:
                     pass
         except Exception as e:
-            print(f"Ошибка копирования: {e}")
+            print(f"Ошибка контекстного копирования: {e}")
 
-    def paste_text(self, event=None):
-        """Вставляет текст из буфера обмена в активный виджет."""
+    def _context_paste(self):
+        #Вставляет текст из буфера обмена в активный виджет.
         try:
-            focused_widget = self.focus_get()
-            clipboard_text = self.clipboard_get()
-
-            if isinstance(focused_widget, ctk.CTkEntry):
-                if focused_widget.selection_present():
-                    focused_widget.delete("sel.first", "sel.last")
-                focused_widget.insert("insert", clipboard_text)
-            elif isinstance(focused_widget, ctk.CTkTextbox):
-                if focused_widget.tag_ranges("sel"):
-                    focused_widget.delete("sel.first", "sel.last")
-                focused_widget.insert("insert", clipboard_text)
-            elif isinstance(focused_widget, tk.Entry):
-                if focused_widget.selection_present():
-                    focused_widget.delete("sel.first", "sel.last")
-                focused_widget.insert("insert", clipboard_text)
+            widget = self.focus_get()
+            text = self.clipboard_get()
+            if isinstance(widget, ctk.CTkEntry):
+                if widget.selection_present():
+                    widget.delete("sel.first", "sel.last")
+                widget.insert("insert", text)
+            elif isinstance(widget, ctk.CTkTextbox):
+                if widget.tag_ranges("sel"):
+                    widget.delete("sel.first", "sel.last")
+                widget.insert("insert", text)
+            elif isinstance(widget, tk.Entry):
+                if widget.selection_present():
+                    widget.delete("sel.first", "sel.last")
+                widget.insert("insert", text)
         except Exception as e:
-            print(f"Ошибка вставки: {e}")
-
-    def show_context_menu(self, event):
-        """Отображает контекстное меню с командами Копировать/Вставить."""
-        context_menu = tk.Menu(self, tearoff=0)
-        context_menu.add_command(label="Копировать", command=self.copy_selection)
-        context_menu.add_command(label="Вставить", command=self.paste_text)
-        try:
-            context_menu.tk_popup(event.x_root, event.y_root)
-        finally:
-            context_menu.grab_release()
+            print(f"Ошибка контекстной вставки: {e}")
 
     # ---------------------- Остальные методы ----------------------
     def check_updates_on_startup(self):
@@ -248,7 +223,7 @@ class CraftApp(ctk.CTk):
             apply_update_and_restart(local_file)
 
     def load_recipes(self):
-        """Загружает список рецептов и обновляет интерфейс."""
+        #Загружает список рецептов и обновляет интерфейс.
         self.recipes = get_all_recipes()
         self.recipe_name_to_id = {r.name: r.id for r in self.recipes}
 
