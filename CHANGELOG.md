@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.3.3 (2026-05-06)
+
+### Bug Fixes
+
+- Fixed recipes editing bug
+  ([`a123c9a`](https://github.com/gitovsky-b/craft-helper/commit/a123c9a0ddaf4ba882d652d764bbdbbba3189c88))
+
+
 ## v0.3.2 (2026-05-06)
 
 ### Bug Fixes
