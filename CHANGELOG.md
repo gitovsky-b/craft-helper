@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.3.2 (2026-05-06)
+
+### Bug Fixes
+
+- Update bugs fixed
+  ([`bdde201`](https://github.com/gitovsky-b/craft-helper/commit/bdde201a05cf835ff0fea30361150c6e12a93403))
+
+
 ## v0.3.1 (2026-04-30)
 
 ### Bug Fixes
