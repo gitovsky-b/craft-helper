@@ -9,6 +9,7 @@ class AddEditRecipeDialog(ctk.CTkToplevel):
     def __init__(self, parent, recipe_id=None):
         super().__init__(parent)
         self.recipe_id = recipe_id
+        self.ingredient_rows = []
         self.title("Редактирование рецепта" if recipe_id else "Новый рецепт")
         self.geometry("500x600")
         self.resizable(False, False)
