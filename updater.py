@@ -92,21 +92,56 @@ def download_update(asset, save_path, progress_callback=None):
         return False
 
 def apply_update_and_restart(saved_file_path):
-    """Создаёт bat-скрипт для замены исполняемого файла и перезапускает приложение."""
+
     if not getattr(sys, 'frozen', False):
         return
+
     current_exe = sys.executable
-    script = f"""@echo off
-timeout /t 2 /nobreak > nul
-move /y "{saved_file_path}" "{current_exe}"
-start "" "{current_exe}"
-del "%~f0" & exit
+
+    if sys.platform == 'win32':
+        script = f"""\
+Start-Sleep -Seconds 2
+Move-Item -Path '{saved_file_path}' -Destination '{current_exe}' -Force
+Start-Process '{current_exe}'
+Remove-Item $MyInvocation.MyCommand.Path
+Exit
 """
-    updater_script = os.path.join(tempfile.gettempdir(), "craft_helper_update.bat")
-    with open(updater_script, 'w') as f:
-        f.write(script)
-    subprocess.Popen([updater_script], shell=True)
-    sys.exit(0)
+        updater_script = Path(tempfile.gettempdir()) / "craft_helper_update.ps1"
+        with open(updater_script, 'w', encoding='utf-8') as f:
+            f.write(script)
+        subprocess.Popen(
+            ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(updater_script)],
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        sys.exit(0)
+
+    elif sys.platform == 'linux':
+        script = f"""#!/bin/bash
+sleep 2
+# Копируем новый файл на место старого
+cp -f "{saved_file_path}" "{current_exe}"
+chmod +x "{current_exe}"
+# Удаляем временный файл обновления
+rm -f "{saved_file_path}"
+# Перезапускаем приложение
+"{current_exe}" &
+# Самоуничтожение скрипта
+rm -- "$0"
+"""
+        updater_script = Path(tempfile.gettempdir()) / "craft_helper_update.sh"
+        with open(updater_script, 'w', encoding='utf-8') as f:
+            f.write(script)
+        os.chmod(updater_script, 0o755)
+        # Запускаем независимо от терминала
+        subprocess.Popen(
+            ['/bin/bash', str(updater_script)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True  # отвязываем от родительского процесса
+        )
+        sys.exit(0)
+    else:
+        raise NotImplementedError(f"Обновление не поддерживается на {sys.platform}")
 
 def get_changelog_from_commits(base_tag: str, head_tag: str):
     compare_url = f"https://api.github.com/repos/{GITHUB_REPO}/compare/{base_tag}...{head_tag}"
