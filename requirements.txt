@@ -1,3 +1,4 @@
+pyinstaller
 customtkinter
 Pillow
 requests

@@ -10,7 +10,7 @@ from packaging import version
 from version import __version__, GITHUB_REPO
 
 def get_latest_release_info():
-    """Получает информацию о последнем релизе с GitHub."""
+    #Получает информацию о последнем релизе с GitHub.
     api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
     try:
         resp = requests.get(api_url, timeout=60)
@@ -51,7 +51,7 @@ def get_update_details(latest_info):
     }
 
 def is_new_version_available(latest_info):
-    """Сравнивает версии. Возвращает True, если найденная версия выше текущей."""
+    #Сравнивает версии. Возвращает True, если найденная версия выше текущей.
     if not latest_info:
         return False
     tag = latest_info.get("tag_name", "").lstrip("v")
@@ -61,7 +61,7 @@ def is_new_version_available(latest_info):
         return False
 
 def find_asset_for_platform(release_info):
-    """Ищет в релизе файл, подходящий для текущей ОС."""
+    #Ищет в релизе файл, подходящий для текущей ОС.
     if not release_info or "assets" not in release_info:
         return None
     for asset in release_info["assets"]:
@@ -73,7 +73,7 @@ def find_asset_for_platform(release_info):
     return None
 
 def download_update(asset, save_path, progress_callback=None):
-    """Скачивает файл обновления."""
+    #Скачивает файл обновления.
     try:
         url = asset["browser_download_url"]
         total = int(asset["size"])
@@ -118,26 +118,21 @@ Exit
     elif sys.platform == 'linux':
         script = f"""#!/bin/bash
 sleep 2
-# Копируем новый файл на место старого
 cp -f "{saved_file_path}" "{current_exe}"
 chmod +x "{current_exe}"
-# Удаляем временный файл обновления
 rm -f "{saved_file_path}"
-# Перезапускаем приложение
 "{current_exe}" &
-# Самоуничтожение скрипта
 rm -- "$0"
 """
         updater_script = Path(tempfile.gettempdir()) / "craft_helper_update.sh"
         with open(updater_script, 'w', encoding='utf-8') as f:
             f.write(script)
         os.chmod(updater_script, 0o755)
-        # Запускаем независимо от терминала
         subprocess.Popen(
             ['/bin/bash', str(updater_script)],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            start_new_session=True  # отвязываем от родительского процесса
+            start_new_session=True
         )
         sys.exit(0)
     else:

@@ -173,7 +173,7 @@ class UpdateDialog(ctk.CTkToplevel):
     def __init__(self, parent, new_version, changelog=""):
         super().__init__(parent)
         self.title("Доступно обновление")
-        self.geometry("480x380")          # немного увеличили размер
+        self.geometry("480x380")
         self.resizable(False, False)
         self.result = False
 
