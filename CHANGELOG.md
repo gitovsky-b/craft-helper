@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.3.5 (2026-05-07)
+
+### Performance Improvements
+
+- Improved handling of network errors when downloading updates
+  ([`6d8e209`](https://github.com/gitovsky-b/craft-helper/commit/6d8e209eafdf609f6a3254b821b4f9cb31b4f6c8))
+
+
 ## v0.3.4 (2026-05-07)
 
 ### Bug Fixes
