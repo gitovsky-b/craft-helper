@@ -2,6 +2,28 @@
 
 <!-- version list -->
 
+## v0.4.0 (2026-05-07)
+
+### Bug Fixes
+
+- Fixed a bug that made it impossible to remove an ingredient from the list of easily accessible
+  ones.
+  ([`231f81c`](https://github.com/gitovsky-b/craft-helper/commit/231f81c478f9ba48a5622734f0f7d41c0e7e9269))
+
+### Features
+
+- Added a function for sending a bug report
+  ([`857170f`](https://github.com/gitovsky-b/craft-helper/commit/857170f173d6d4e05dbf51700b4cc31f5ed52f93))
+
+### Performance Improvements
+
+- Improved handling of network errors when downloading updates
+  ([`6d8e209`](https://github.com/gitovsky-b/craft-helper/commit/6d8e209eafdf609f6a3254b821b4f9cb31b4f6c8))
+
+- Improved logging
+  ([`cb9b36f`](https://github.com/gitovsky-b/craft-helper/commit/cb9b36fca7824fdc5f46c66a459792277f7bf1fc))
+
+
 ## v0.3.4 (2026-05-07)
 
 ### Bug Fixes
