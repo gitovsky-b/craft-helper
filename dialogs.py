@@ -120,35 +120,70 @@ class AddEditRecipeDialog(ctk.CTkToplevel):
             add_recipe(recipe)
         self.destroy()
 
-
 class EasyIngredientsDialog(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Легкодоступные ингредиенты")
         self.geometry("400x500")
-        self.ingredients = get_easy_ingredients()
 
-        self.listbox = ctk.CTkTextbox(self, height=300)
+        # Запоминаем выбранный ингредиент (аналог self.selected_recipe)
+        self.selected_ingredient = None
+
+        # Виджет списка
+        self.listbox = ctk.CTkTextbox(self, height=300, state="normal")
         self.listbox.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Наполняем и сразу блокируем редактирование
         self.update_list()
 
-        # Добавление
+        # Привязываем выбор по клику
+        self.listbox.bind("<ButtonRelease-1>", self.on_ingredient_select)
+
+        # Добавление нового ингредиента
         frame = ctk.CTkFrame(self)
         frame.pack(fill="x", padx=10, pady=5)
         self.new_name = ctk.CTkEntry(frame, width=200)
         self.new_name.pack(side="left", padx=5)
         ctk.CTkButton(frame, text="Добавить", command=self.add_ingredient).pack(side="left", padx=5)
 
-        # Удаление выбранного
+        # Кнопка удаления
         ctk.CTkButton(self, text="Удалить выбранный", command=self.delete_selected).pack(pady=5)
 
     def update_list(self):
+        #Обновляет содержимое списка, сбрасывает выбор.
         self.ingredients = get_easy_ingredients()
         self.listbox.configure(state="normal")
         self.listbox.delete("1.0", "end")
         for ing in self.ingredients:
             self.listbox.insert("end", ing + "\n")
         self.listbox.configure(state="disabled")
+
+        # Сбрасываем выбранный ингредиент и визуальное выделение
+        self.selected_ingredient = None
+        self.listbox.tag_remove("selected", "1.0", "end")
+
+    def on_ingredient_select(self, event):
+        #Обрабатывает клик по строке, запоминает выбранный ингредиент.
+        try:
+            index = self.listbox.index(f"@{event.x},{event.y}")
+            line = self.listbox.get(f"{index} linestart", f"{index} lineend")
+            name = line.strip()
+            if name and name in self.ingredients:
+                self.selected_ingredient = name
+                self.highlight_selected_ingredient(index)
+            else:
+                self.selected_ingredient = None
+                self.listbox.tag_remove("selected", "1.0", "end")
+        except Exception:
+            pass
+
+    def highlight_selected_ingredient(self, index):
+        #Подсвечивает строку по индексу.
+        self.listbox.tag_remove("selected", "1.0", "end")
+        start = f"{index} linestart"
+        end = f"{index} lineend"
+        self.listbox.tag_add("selected", start, end)
+        self.listbox.tag_config("selected", background="#3a7ebf", foreground="white")
 
     def add_ingredient(self):
         name = self.new_name.get().strip().lower()
@@ -158,16 +193,14 @@ class EasyIngredientsDialog(ctk.CTkToplevel):
             self.update_list()
 
     def delete_selected(self):
-        try:
-            index = self.listbox.index("@%d,%d" % (self.listbox.winfo_pointerx() - self.listbox.winfo_rootx(),
-                                                   self.listbox.winfo_pointery() - self.listbox.winfo_rooty()))
-            line = self.listbox.get(f"{index} linestart", f"{index} lineend")
-            name = line.strip()
-            if name:
-                delete_easy_ingredient(name)
-                self.update_list()
-        except:
-            pass
+        #Удаляет выбранный ингредиент, если он есть.
+        if not self.selected_ingredient:
+            messagebox.showwarning("Ничего не выбрано", "Пожалуйста, выберите ингредиент в списке.")
+            return
+
+        delete_easy_ingredient(self.selected_ingredient)
+        self.update_list()
+        # update_list уже сбрасывает selected_ingredient и теги
 
 class UpdateDialog(ctk.CTkToplevel):
     def __init__(self, parent, new_version, changelog=""):

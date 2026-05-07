@@ -5,7 +5,7 @@ echo "=== Сборка CraftHelper ==="
 rm -rf build dist *.spec
 
 # Сборка с явным указанием всех скрытых импортов
-pyinstaller --onefile --console --name CraftHelper \
+pyinstaller --onefile --noconsole --name CraftHelper \
     --add-data "assets/recipes.txt:assets" \
     --add-data "assets/easy_ingredients.txt:assets" \
     --collect-all customtkinter \
