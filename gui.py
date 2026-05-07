@@ -21,6 +21,13 @@ from models import Recipe
 import threading
 import os
 import tempfile
+import shutil
+import datetime
+import os
+import subprocess
+import sys
+from pathlib import Path
+import report_bug
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -84,6 +91,10 @@ class CraftApp(ctk.CTk):
         self.servings_entry.pack(fill="x", padx=5, pady=2)
 
         ctk.CTkButton(calc_frame, text="🔨 Рассчитать", command=self.calculate).pack(fill="x", padx=5, pady=10)
+
+        self.bottom_frame = ctk.CTkFrame(self.left_frame)
+        self.bottom_frame.pack(side="bottom", fill="x", padx=10, pady=(0, 10))
+        ctk.CTkButton(self.bottom_frame, text="🐞 Сообщить об ошибке", command=self.report_bug).pack(fill="x", padx=2, pady=2)
 
         # --- Правая панель: информация о рецепте ---
         self.info_frame = ctk.CTkFrame(self.right_frame)
@@ -389,6 +400,31 @@ class CraftApp(ctk.CTk):
         EasyIngredientsDialog(self)
         if self.selected_recipe:
             self.update_recipe_info()
+
+    """def open_logs_folder(self):
+    #Открывает папку с логами в файловом менеджере ОС.
+        log_dir = Path.home() / ".craft_helper"
+        try:
+            if sys.platform == "win32":
+                os.startfile(log_dir)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", log_dir])
+            else:  # linux и другие unix-подобные
+                subprocess.Popen(["xdg-open", log_dir])
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось открыть папку с логами:\n{e}")"""
+    
+    def report_bug(self):
+    #Создаёт архив с логами и информацией о системе.
+        report_bug.report_bug(self)
+
+    def _collect_system_info(self):
+    #Собирает информацию о системе (обёртка).
+        return report_bug._collect_system_info(self)
+
+    def _open_mail_client(self, archive_path: Path):
+    #Открывает почтовый клиент (обёртка).
+        report_bug._open_mail_client(self, archive_path)
 
 if __name__ == "__main__":
     from database import init_db, import_initial_data, DB_NAME
