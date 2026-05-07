@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import json
 import re
+import time
 from pathlib import Path
 from packaging import version
 from version import __version__, GITHUB_REPO
@@ -72,24 +73,28 @@ def find_asset_for_platform(release_info):
             return asset
     return None
 
-def download_update(asset, save_path, progress_callback=None):
-    #Скачивает файл обновления.
-    try:
-        url = asset["browser_download_url"]
-        total = int(asset["size"])
-        downloaded = 0
-        with requests.get(url, stream=True, timeout=120) as r:
-            r.raise_for_status()
-            with open(save_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    if progress_callback and total:
-                        progress_callback(min(downloaded / total, 1.0))
-        return True
-    except Exception as e:
-        print(f"Ошибка загрузки: {e}")
-        return False
+def download_update(asset, save_path, progress_callback=None, max_retries=3):
+    #Скачивает файл обновления
+    url = asset["browser_download_url"]
+    total = int(asset["size"])
+    for attempt in range(1, max_retries + 1):
+        try:
+            with requests.get(url, stream=True, timeout=120) as r:
+                r.raise_for_status()
+                downloaded = 0
+                with open(save_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if progress_callback and total:
+                            progress_callback(min(downloaded / total, 1.0))
+            return True
+        except Exception as e:
+            print(f"Ошибка загрузки (попытка {attempt}): {e}")
+            if attempt < max_retries:
+                time.sleep(2 ** attempt)  # экспоненциальная задержка
+            else:
+                return False
 
 def apply_update_and_restart(saved_file_path):
 
