@@ -3,7 +3,41 @@ import os
 import sqlite3
 import json
 import re
+import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
+# ---------- Настройка логирования ----------
+def setup_logging():
+    # Папка для логов: ~/.craft_helper/
+    home = Path.home()
+    log_dir = home / ".craft_helper"
+    log_dir.mkdir(exist_ok=True)
+    log_file = log_dir / "app.log"
+
+    # Ограничение: один файл до 20 МБ, храним 2 старых файла
+    MAX_BYTES = 20 * 1024 * 1024  # 20 МБ
+    BACKUP_COUNT = 2
+
+    # Базовый логгер
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    # Ротирующий обработчик
+    handler = RotatingFileHandler(
+        log_file, maxBytes=MAX_BYTES, backupCount=BACKUP_COUNT, encoding='utf-8'
+    )
+    formatter = logging.Formatter(
+        '%(asctime)s [%(levelname)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    # Дублировать логи в консоль (только при разработке)
+    # console_handler = logging.StreamHandler()
+    # console_handler.setFormatter(formatter)
+    # logger.addHandler(console_handler)
 
 # ---------- Утилиты для ресурсов ----------
 def resource_path(relative_path):
@@ -118,7 +152,13 @@ def ensure_database_ready():
 
 # ---------- Точка входа ----------
 if __name__ == "__main__":
+    setup_logging()
+    logging.info("=== Приложение запущено ===")
+
     ensure_database_ready()
+    
     from gui import CraftApp
     app = CraftApp()
     app.mainloop()
+    
+    logging.info("=== Приложение завершено ===")
